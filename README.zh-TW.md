@@ -536,7 +536,7 @@ SCREENSHOT_PATH=screenshots
 
 ## 📄 授權
 
-[您的授權資訊]
+本專案採用 MIT License 授權 - 詳見 [LICENSE](LICENSE) 檔案。
 
 ---
 
