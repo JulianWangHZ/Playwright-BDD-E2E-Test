@@ -1,0 +1,31 @@
+---
+alwaysApply: true
+scope: playwright
+---
+
+# Playwright MCP Execution Rules
+
+## 1. Operation Principles
+- Only enable Playwright MCP when UI verification or issue reproduction is actually required.
+- Before each `navigate`, state the target URL and the goal; after the action, report the final URL and title.
+- If the scenario requires login or other prerequisites, make sure they are satisfied first—do not skip steps.
+
+## 2. Alignment with BDD/Test Steps
+- Playwright actions must match the feature/test steps and be executed in order.
+- Use the fixed test data defined in code (zip codes, addresses, etc.) for consistency.
+- When a scenario requires multiple verifications, perform and record each one individually.
+
+## 3. Locator Usage and Verification
+- Prefer stable selectors like data-testid / data-cy / aria-label.
+- When DOM details are needed, use `page.locator` or similar APIs; avoid injecting or modifying the DOM.
+- After each action, capture the key UI state (e.g., delivery card text, whether the Edit button is visible).
+
+## 4. Error Handling
+- When an action fails, log the error message (console/log), number of attempts, and any retry strategy.
+- If a refresh or modal reopen is required, explain why.
+- Document network/auth errors (403/401/500, etc.) and advise manual verification if needed.
+
+## 5. Reporting Format
+- Summarize each run with `Navigate -> Actions -> Verification Result`.
+- If the scenario needs screenshots or console data, attach the relevant files or descriptions.
+- Clearly state success/failure and recommend next steps (e.g., “UI update confirmed”, “needs backend investigation”).

@@ -1,0 +1,382 @@
+---
+alwaysApply: true
+---
+
+# Python Coding Rules for Web Automation with Playwright
+
+## 1. Python Basic Rules
+
+### PEP8 Guidelines
+- Follow PEP8 code style guide
+- Use 4 spaces for indentation, no tabs
+- Maximum line length of 100 characters (adjustable when necessary)
+- Class names use PascalCase (e.g., `OrderPage`)
+- Function and variable names use snake_case (e.g., `click_checkout_button`)
+- Constants use UPPER_SNAKE_CASE (e.g., `MAX_WAIT_TIME`)
+- Use blank lines to separate standard library, third-party, and local library imports
+- Use meaningful variable names, avoid single-letter variables (except loop counters)
+- For functions/methods with no return value, omit the `-> None` annotation; only specify return
+  types when the function actually returns a value.
+
+### DRY Principle (Don't Repeat Yourself)
+- Avoid duplicate code, extract repeated logic into functions or methods
+- Shared functionality should be placed in `BaseAction` or `BaseUtils`
+- If the same logic is used in multiple places, create a shared method
+
+### SOLID Principles
+- **Single Responsibility**: Each class/function should have only one responsibility
+- **Open/Closed**: Open for extension, closed for modification (use inheritance and interfaces)
+- **Liskov Substitution**: Subclasses should be substitutable for their base classes
+- **Interface Segregation**: Use small, focused interfaces
+- **Dependency Inversion**: Depend on abstractions, not concrete implementations
+
+## 2. SonarQube Quality Rules
+
+### Cognitive Complexity
+- Function cognitive complexity should be kept below 15
+- If function complexity is too high, consider:
+  - Split complex logic into multiple smaller functions
+  - Use early returns to reduce nesting
+  - Extract conditionals into separate methods
+  - Use strategy pattern for complex branching logic
+
+### Code Quality
+- Avoid deep nesting (recommended max 3 levels)
+- Use guard clauses to reduce nesting
+- Avoid overly long methods (recommended max 50 lines)
+- Avoid overly long parameter lists (recommended max 5 parameters)
+
+```python
+# ❌ Bad: Too complex
+def complex_function(self):
+    if condition1:
+        if condition2:
+            if condition3:
+                if condition4:
+                    # do something
+
+# ✅ Good: Use early return
+def complex_function(self):
+    if not condition1:
+        return
+    if not condition2:
+        return
+    if not condition3:
+        return
+    # do something
+```
+
+## 3. Locator Rules
+
+### Using Playwright Locators (Preferred Method)
+- **Store locators in `locators/` folder** - Keep locators separate from Page Objects
+- **Use Playwright Locator objects directly** - BaseAction methods accept Locator objects directly
+- Prefer stable selectors like `data-testid`, `data-cy`, `aria-label`
+- Use Playwright's built-in locator methods when available:
+  - `page.get_by_test_id('button')` - for data-testid
+  - `page.get_by_role('button', name='Submit')` - for accessible roles
+  - `page.get_by_text('Click me')` - for text content
+  - `page.get_by_label('Email')` - for form labels
+  - `page.locator('css-selector')` - for CSS selectors
+  - `page.locator('xpath=//div')` - for XPath (use sparingly)
+
+```python
+# locators/order_page_locators.py
+class OrderPageLocators:
+    """Playwright locators - use with page object to create Locator instances."""
+    
+    # Use test_id for data-testid attributes
+    CHECKOUT_BUTTON = 'test_id:checkout-button'
+    DELIVERY_OPTION = 'test_id:delivery-option'
+    DELIVERY_PROMPT = 'test_id:delivery-prompt'
+    CONFIRM_BUTTON = 'test_id:confirm-button'
+    
+    # Use css: prefix for CSS selectors
+    RESTAURANT_HEADING = 'css:[data-testid="restaurant-heading"]'
+    ADDRESS_INPUT = 'css:[data-testid="address-input"]'
+    
+    # Use xpath: prefix for XPath (use sparingly)
+    # CUSTOM_XPATH = 'xpath://div[@class="custom"]'
+```
+
+### Using Locators in Page Objects
+```python
+# pages/order_page.py
+from pages.base_actions.base_action import BaseAction
+from locators.order_page_locators import OrderPageLocators
+from playwright.sync_api import Page
+
+class OrderPage(BaseAction):
+    def __init__(self, page: Page):
+        super().__init__(page)
+        # No need to reassign locators - use OrderPageLocators directly
+    
+    def click_checkout(self):
+        # Pass locator string directly - BaseAction handles conversion automatically
+        self.click_element(OrderPageLocators.CHECKOUT_BUTTON)
+    
+    def input_address(self, address: str):
+        self.send_keys_to_element(OrderPageLocators.ADDRESS_INPUT, address)
+    
+    def wait_for_loaded(self):
+        self.wait_for_element_visible(OrderPageLocators.RESTAURANT_HEADING)
+        self.wait_for_element_visible(OrderPageLocators.DELIVERY_PROMPT)
+```
+
+**Note**: BaseAction methods automatically convert locator strings to Playwright Locator objects internally. You can pass locator strings directly without manual conversion.
+
+### Alternative: Direct Locator Definition (Not Recommended)
+If you prefer defining locators directly in Page Objects (not recommended for maintainability):
+
+```python
+from pages.base_actions.base_action import BaseAction
+from playwright.sync_api import Page
+
+class OrderPage(BaseAction):
+    def __init__(self, page: Page):
+        super().__init__(page)
+        # Define locators directly (not recommended)
+        self.checkout_button = page.get_by_test_id('checkout-button')
+        self.address_input = page.locator('[data-testid="address-input"]')
+    
+    def click_checkout(self):
+        self.click_element(self.checkout_button)
+```
+
+### Backward Compatibility (Deprecated)
+BaseAction also supports tuple format `(locator_type, locator_value)` for backward compatibility, but **direct Locator objects are preferred**:
+
+```python
+# Deprecated but still supported
+self.click_element(('test_id', 'checkout-button'))
+self.click_element(('css_selector', '[data-testid="checkout-button"]'))
+```
+
+### Locator Best Practices
+- **Preferred**: Store locators as uppercase constants in dedicated classes under the `locators/` package
+- Use string format with prefix (`test_id:`, `css:`, `xpath:`) to indicate locator type
+- **No conversion needed**: BaseAction methods automatically convert locator strings to Locator objects
+- **Direct usage**: Use `OrderPageLocators.CHECKOUT_BUTTON` directly in methods - no need to reassign in `__init__`
+- Pass locator strings directly to BaseAction methods - they handle conversion internally
+- Keep locator names descriptive and grouped by page
+- Prefer stable attributes such as `data-testid`
+- Avoid fragile locators (e.g., brittle XPath, overly complex CSS selectors)
+- When using Playwright MCP or code generation, you can use the generated locator strings directly
+
+## 4. Page Object Pattern Rules
+
+### Inherit from BaseAction
+- All Page Object classes must inherit from `BaseAction`
+- Fully utilize `BaseAction` provided base methods, avoid duplicate implementations
+- BaseAction now uses Playwright Page object instead of Selenium driver
+
+### Using BaseAction Methods
+- **Wait for elements**: Use `wait_for_element_visible()`, `wait_for_element_clickable()`, etc.
+- **Click elements**: Use `click_element()`, which includes Playwright's auto-waiting
+- **Input text**: Use `send_keys_to_element()`, which includes clearing logic
+- **Check elements**: Use `is_element_visible()`, `is_element_clickable()`, etc.
+- **Playwright auto-waits**: Most actions automatically wait for elements to be actionable
+
+```python
+from pages.base_actions.base_action import BaseAction
+from locators.order_page_locators import OrderPageLocators
+from playwright.sync_api import Page
+
+class OrderPage(BaseAction):
+    def __init__(self, page: Page):
+        super().__init__(page)  # Pass Playwright Page object
+        # No need to reassign locators - use OrderPageLocators directly
+
+    def open(self):
+        self.open_url(url=self.config.BASE_URL)
+
+    def wait_for_loaded(self):
+        # Pass locator strings directly - BaseAction converts automatically
+        self.wait_for_element_visible(OrderPageLocators.RESTAURANT_HEADING)
+        self.wait_for_element_visible(OrderPageLocators.DELIVERY_PROMPT)
+
+    def click_checkout(self):
+        self.click_element(OrderPageLocators.CHECKOUT_BUTTON)
+
+    def input_address(self, address: str):
+        self.send_keys_to_element(OrderPageLocators.ADDRESS_INPUT, address)
+
+    def is_confirm_button_enabled(self):
+        return self.wait_for_element_clickable(OrderPageLocators.CONFIRM_BUTTON, timeout=5)
+```
+
+### Page Object Method Design
+- Each method should perform only one clear action
+- Methods should return meaningful values (e.g., return page objects to support method chaining)
+- Use clear error messages for easier debugging
+- Leverage Playwright's auto-waiting - no need for manual waits in most cases
+
+## 5. Test Writing Rules
+
+### Step Definitions & Test Structure
+- Define BDD steps alongside the test module (e.g., `tests/test_order_page.py`)
+- Instantiate the required Page Object inside each step function; do not rely on returning it from previous steps
+- Pass `page` fixture (Playwright Page object) to Page Object constructors
+- Keep step functions concise and delegate UI logic to Page Objects
+- When parsing dynamic values, use `parsers.parse()` or `parsers.cfparse()` (as needed)
+- Include scenario comments (e.g., `# Scenario: ... @tags`) above the first step (usually the `@given`) to improve readability
+- Name step functions after what they verify/do (e.g., `verify_order_page_loaded`) rather than copying the step text verbatim
+- **Locator usage**: You can pass locator strings directly to BaseAction methods - no conversion needed in tests
+
+```python
+from pytest_bdd import given, scenarios, when, then, parsers
+from pages.order_page import OrderPage
+
+scenarios("../features/order_page.feature")
+
+
+# Scenario: Open Food Ordering company page @successful_order_page_load @order_page
+@given("I open the Food Ordering company page")
+def open_food_ordering_page(page):
+    order_page = OrderPage(page)  # Pass Playwright Page object
+    order_page.open()
+    order_page.wait_for_page_loaded()
+
+
+@then("the page should display the company's food ordering options and relevant information")
+def verify_order_page_content(page):
+    order_page = OrderPage(page)
+    assert order_page.get_restaurant_name().strip()
+    assert order_page.is_delivery_prompt_visible()
+
+
+@then("the delivery prompt should not be visible")
+def verify_delivery_prompt_not_visible(page):
+    order_page = OrderPage(page)
+    order_page.select_service_type("Takeout")
+    assert order_page.is_delivery_prompt_hidden()
+```
+
+## 6. Error Handling
+
+### Exception Handling
+- Use explicit exception types, avoid bare `except:`
+- In Page Object methods, let exceptions propagate upward, handled by test layer
+- Playwright uses `TimeoutError` (imported as `PlaywrightTimeoutError`) instead of Selenium's `TimeoutException`
+- Playwright's auto-waiting reduces the need for explicit exception handling in many cases
+
+```python
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+
+# ✅ Good: Explicit exception handling
+try:
+    self.wait_for_element_visible(self.button)
+except PlaywrightTimeoutError:
+    raise ElementNotFoundError(f"Button not found: {self.button}")
+```
+
+## 7. Comments and Documentation
+
+### Docstring
+- All public methods should have docstrings
+- Use Google-style docstrings
+- Include parameters, return values, and possible exceptions
+
+```python
+def click_checkout_button(self):
+    """
+    Clicks the checkout button on the page.
+    
+    Raises:
+        PlaywrightTimeoutError: If the checkout button is not found or not clickable within timeout.
+    """
+    self.click_element(self.checkout_button)
+```
+
+## 8. Test Data Management
+
+### Test Data
+- Use fixed test data (e.g., email, phone number) that meets format requirements
+- Avoid hardcoding, place test data in configuration files or fixtures
+- Use meaningful test data for easy identification and debugging
+
+## 9. Code Organization
+
+### File Structure
+- Each Page Object should correspond to one file
+- Step definitions should be organized by feature modules (e.g., `order_placement_steps.py`)
+- Shared functionality should be in `base_actions` or `utils`
+
+### Import Order
+1. Standard library
+2. Third-party libraries
+3. Local application libraries
+
+```python
+# Standard library
+import time
+from datetime import datetime
+
+# Third-party libraries
+from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
+from pytest_bdd import given, when, then
+
+# Local libraries
+from pages.base_actions.base_action import BaseAction
+from locators.order_page_locators import OrderPageLocators
+```
+
+**Note**: Always import locators from the `locators/` package, not from page objects.
+
+## 10. Playwright-Specific Best Practices
+
+### Auto-Waiting
+Playwright automatically waits for elements to be actionable before performing actions. **No need for explicit waits in most cases.**
+
+#### Methods That Auto-Wait (Actions)
+These methods automatically wait for elements to be actionable (visible, stable, enabled, not covered):
+- `click()`, `dblclick()`, `hover()`
+- `fill()`, `type()`, `press()`, `clear()`
+- `check()`, `uncheck()`, `set_checked()`
+- `select_option()`
+- `scroll_into_view_if_needed()`
+- `tap()` (mobile)
+
+#### Methods That Auto-Wait (Read Operations)
+These methods automatically wait for elements to be in the required state:
+- `inner_text()` - waits for element to be visible
+- `text_content()` - waits for element to be attached to DOM
+- `input_value()` - waits for element to be visible
+- `get_attribute()` - waits for element to be attached to DOM
+
+#### Methods That Do NOT Auto-Wait (Immediate Return)
+These methods return immediately without waiting:
+- `is_visible()` - returns boolean immediately
+- `is_hidden()` - returns boolean immediately
+- `is_enabled()` - returns boolean immediately
+- `count()` - returns count immediately
+
+**Best Practice**: 
+- ✅ **Good**: `locator.click()` - no need to wait first
+- ✅ **Good**: `locator.fill('text')` - no need to wait first
+- ❌ **Unnecessary**: `wait_for_element_visible()` then `click()` - redundant
+- ✅ **Needed**: Use `wait_for_element_visible()` only when you need to verify/assert visibility before other logic
+
+### Locator Strategy
+- Prefer semantic locators (`get_by_role`, `get_by_text`, `get_by_label`) over CSS/XPath
+- Use `data-testid` for test-specific elements
+- Avoid brittle selectors that depend on DOM structure
+
+### Performance
+- Use `page.goto()` with `wait_until` options (`'load'`, `'domcontentloaded'`, `'networkidle'`)
+- Use `page.wait_for_load_state()` when needed
+- Avoid unnecessary `time.sleep()` - use Playwright's waiting mechanisms instead
+
+## 11. Summary Checklist
+
+Before submitting code, ensure:
+- [ ] Follow PEP8 guidelines
+- [ ] Function cognitive complexity < 15
+- [ ] Use Playwright Locator objects directly (no conversion needed)
+- [ ] Page Objects inherit from `BaseAction` and use its methods
+- [ ] Step definitions use parser to pass parameters
+- [ ] All public methods have docstrings
+- [ ] No duplicate code
+- [ ] Error handling is appropriate (use `PlaywrightTimeoutError`)
+- [ ] Test data meets format requirements
+- [ ] Leverage Playwright's auto-waiting instead of manual waits
