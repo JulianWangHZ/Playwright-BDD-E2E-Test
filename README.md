@@ -517,23 +517,6 @@ SCREENSHOT_PATH=screenshots
 
 ---
 
-## 🤝 Contributing
-
-### Code Standards
-- Follow PEP8 guidelines
-- Maintain cognitive complexity < 15
-- Include docstrings for all public methods
-- Write meaningful test descriptions
-
-### Pull Request Process
-1. Create feature branch
-2. Write tests for new functionality
-3. Ensure all tests pass
-4. Update documentation if needed
-5. Submit pull request with description
-
----
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
