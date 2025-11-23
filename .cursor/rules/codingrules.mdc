@@ -68,9 +68,10 @@ def complex_function(self):
 
 ## 3. Locator Rules
 
-### Using Playwright Locators (Preferred Method)
-- **Store locators in `locators/` folder** - Keep locators separate from Page Objects
-- **Use Playwright Locator objects directly** - BaseAction methods accept Locator objects directly
+### Using Playwright Locators (Industry Standard)
+- **Store locators in `locators/` folder** - Keep locators separate from Page Objects for better organization
+- **Use Playwright Locator objects directly** - No string conversion needed, full type support
+- **Define locators as properties in locator classes** - Initialize with `page` instance in `__init__`
 - Prefer stable selectors like `data-testid`, `data-cy`, `aria-label`
 - Use Playwright's built-in locator methods when available:
   - `page.get_by_test_id('button')` - for data-testid
@@ -82,21 +83,22 @@ def complex_function(self):
 
 ```python
 # locators/order_page_locators.py
+from playwright.sync_api import Page, Locator
+
 class OrderPageLocators:
-    """Playwright locators - use with page object to create Locator instances."""
+    """Playwright locators using Locator objects - stored in separate file."""
     
-    # Use test_id for data-testid attributes
-    CHECKOUT_BUTTON = 'test_id:checkout-button'
-    DELIVERY_OPTION = 'test_id:delivery-option'
-    DELIVERY_PROMPT = 'test_id:delivery-prompt'
-    CONFIRM_BUTTON = 'test_id:confirm-button'
-    
-    # Use css: prefix for CSS selectors
-    RESTAURANT_HEADING = 'css:[data-testid="restaurant-heading"]'
-    ADDRESS_INPUT = 'css:[data-testid="address-input"]'
-    
-    # Use xpath: prefix for XPath (use sparingly)
-    # CUSTOM_XPATH = 'xpath://div[@class="custom"]'
+    def __init__(self, page: Page):
+        # Use Playwright's semantic locators when possible
+        # Use UPPERCASE for locator property names
+        self.CHECKOUT_BUTTON = page.get_by_test_id('checkout-button')
+        self.DELIVERY_OPTION = page.get_by_role('radio', name='Delivery')
+        self.DELIVERY_PROMPT = page.locator('[data-testid="delivery-prompt"]')
+        self.CONFIRM_BUTTON = page.get_by_role('button', name='Confirm')
+        
+        # CSS selectors when semantic locators aren't available
+        self.RESTAURANT_HEADING = page.locator('[data-testid="restaurant-heading"]')
+        self.ADDRESS_INPUT = page.get_by_label('Address')
 ```
 
 ### Using Locators in Page Objects
@@ -109,21 +111,28 @@ from playwright.sync_api import Page
 class OrderPage(BaseAction):
     def __init__(self, page: Page):
         super().__init__(page)
-        # No need to reassign locators - use OrderPageLocators directly
+        # Initialize locators with page instance - use page-specific name for better readability
+        self.order_locators = OrderPageLocators(page)
     
     def click_checkout(self):
-        # Pass locator string directly - BaseAction handles conversion automatically
-        self.click_element(OrderPageLocators.CHECKOUT_BUTTON)
+        # Pass Locator object directly - no conversion needed
+        self.click_element(self.order_locators.CHECKOUT_BUTTON)
     
     def input_address(self, address: str):
-        self.send_keys_to_element(OrderPageLocators.ADDRESS_INPUT, address)
+        self.send_keys_to_element(self.order_locators.ADDRESS_INPUT, address)
     
     def wait_for_loaded(self):
-        self.wait_for_element_visible(OrderPageLocators.RESTAURANT_HEADING)
-        self.wait_for_element_visible(OrderPageLocators.DELIVERY_PROMPT)
+        self.wait_for_element_visible(self.order_locators.RESTAURANT_HEADING)
+        self.wait_for_element_visible(self.order_locators.DELIVERY_PROMPT)
 ```
 
-**Note**: BaseAction methods automatically convert locator strings to Playwright Locator objects internally. You can pass locator strings directly without manual conversion.
+**Alternative: Direct Usage (For one-time use)**
+If you only use a locator once, you can create it directly:
+```python
+def click_checkout(self):
+    # Direct usage: OrderPageLocators(self.page).element
+    self.click_element(OrderPageLocators(self.page).checkout_button)
+```
 
 ### Alternative: Direct Locator Definition (Not Recommended)
 If you prefer defining locators directly in Page Objects (not recommended for maintainability):
@@ -143,25 +152,28 @@ class OrderPage(BaseAction):
         self.click_element(self.checkout_button)
 ```
 
-### Backward Compatibility (Deprecated)
-BaseAction also supports tuple format `(locator_type, locator_value)` for backward compatibility, but **direct Locator objects are preferred**:
+**Note**: Storing locators in separate `locators/` folder is recommended for better organization and maintainability, especially in large projects.
+
+### Backward Compatibility
+BaseAction supports CSS selector strings for backward compatibility:
 
 ```python
-# Deprecated but still supported
-self.click_element(('test_id', 'checkout-button'))
-self.click_element(('css_selector', '[data-testid="checkout-button"]'))
+# Still supported but not recommended
+self.click_element('[data-testid="checkout-button"]')
 ```
 
 ### Locator Best Practices
-- **Preferred**: Store locators as uppercase constants in dedicated classes under the `locators/` package
-- Use string format with prefix (`test_id:`, `css:`, `xpath:`) to indicate locator type
-- **No conversion needed**: BaseAction methods automatically convert locator strings to Locator objects
-- **Direct usage**: Use `OrderPageLocators.CHECKOUT_BUTTON` directly in methods - no need to reassign in `__init__`
-- Pass locator strings directly to BaseAction methods - they handle conversion internally
-- Keep locator names descriptive and grouped by page
-- Prefer stable attributes such as `data-testid`
-- Avoid fragile locators (e.g., brittle XPath, overly complex CSS selectors)
-- When using Playwright MCP or code generation, you can use the generated locator strings directly
+- **Preferred**: Store locators as properties in locator classes under the `locators/` package
+- **Use Locator objects directly** - No string conversion needed, full type support
+- **Initialize in Page Object** - Create locator instance in Page Object's `__init__` with page-specific name (e.g., `self.order_locators = OrderPageLocators(page)`)
+- **Use UPPERCASE for locator properties** - Define locator properties in locator classes using UPPERCASE (e.g., `self.CHECKOUT_BUTTON`, `self.SERVICES_LINK`)
+- **Use page-specific names** - Use `self.{page}_locators.ELEMENT_NAME` for better readability (e.g., `self.order_locators.CHECKOUT_BUTTON`)
+- **Semantic locators first** - Prefer `get_by_role`, `get_by_text`, `get_by_label` over CSS selectors
+- **Keep locator names descriptive** - Use clear, descriptive property names (snake_case)
+- **Group by page** - Each page has its own locator class
+- **Prefer stable attributes** - Use `data-testid`, `aria-label` when available
+- **Avoid fragile locators** - Minimize XPath and complex CSS selectors
+- **MCP compatibility** - Playwright MCP generated code works directly with this approach
 
 ## 4. Page Object Pattern Rules
 
@@ -184,25 +196,26 @@ from playwright.sync_api import Page
 
 class OrderPage(BaseAction):
     def __init__(self, page: Page):
-        super().__init__(page)  # Pass Playwright Page object
-        # No need to reassign locators - use OrderPageLocators directly
+        super().__init__(page)
+        # Initialize locators with page instance - use page-specific name for better readability
+        self.order_locators = OrderPageLocators(page)
 
     def open(self):
         self.open_url(url=self.config.BASE_URL)
 
     def wait_for_loaded(self):
-        # Pass locator strings directly - BaseAction converts automatically
-        self.wait_for_element_visible(OrderPageLocators.RESTAURANT_HEADING)
-        self.wait_for_element_visible(OrderPageLocators.DELIVERY_PROMPT)
+        # Pass Locator objects directly
+        self.wait_for_element_visible(self.order_locators.RESTAURANT_HEADING)
+        self.wait_for_element_visible(self.order_locators.DELIVERY_PROMPT)
 
     def click_checkout(self):
-        self.click_element(OrderPageLocators.CHECKOUT_BUTTON)
+        self.click_element(self.order_locators.CHECKOUT_BUTTON)
 
     def input_address(self, address: str):
-        self.send_keys_to_element(OrderPageLocators.ADDRESS_INPUT, address)
+        self.send_keys_to_element(self.order_locators.ADDRESS_INPUT, address)
 
     def is_confirm_button_enabled(self):
-        return self.wait_for_element_clickable(OrderPageLocators.CONFIRM_BUTTON, timeout=5)
+        return self.wait_for_element_clickable(self.order_locators.CONFIRM_BUTTON, timeout=5)
 ```
 
 ### Page Object Method Design
@@ -221,7 +234,7 @@ class OrderPage(BaseAction):
 - When parsing dynamic values, use `parsers.parse()` or `parsers.cfparse()` (as needed)
 - Include scenario comments (e.g., `# Scenario: ... @tags`) above the first step (usually the `@given`) to improve readability
 - Name step functions after what they verify/do (e.g., `verify_order_page_loaded`) rather than copying the step text verbatim
-- **Locator usage**: You can pass locator strings directly to BaseAction methods - no conversion needed in tests
+- **Locator usage**: Pass Locator objects directly to BaseAction methods - full type support and IDE autocomplete
 
 ```python
 from pytest_bdd import given, scenarios, when, then, parsers
@@ -393,7 +406,11 @@ These methods return immediately without waiting:
 Before submitting code, ensure:
 - [ ] Follow PEP8 guidelines
 - [ ] Function cognitive complexity < 15
-- [ ] Use Playwright Locator objects directly (no conversion needed)
+- [ ] Use Playwright Locator objects directly (industry standard approach)
+- [ ] Locators stored in `locators/` classes with `__init__(page)` pattern
+- [ ] Locator properties defined in UPPERCASE in locator classes (e.g., `self.CHECKOUT_BUTTON`)
+- [ ] Page Objects initialize locators in `__init__` with page-specific name (e.g., `self.order_locators = OrderPageLocators(page)`)
+- [ ] Use `self.{page}_locators.ELEMENT_NAME` to access locators for better readability
 - [ ] Page Objects inherit from `BaseAction` and use its methods
 - [ ] Step definitions use parser to pass parameters
 - [ ] Docstrings only added for complex functions (not for simple methods)

@@ -301,12 +301,17 @@ def get_device_class(device_type: str) -> BaseDevice:
 
 1. **定義定位器** (`locators/home_page_locators.py`):
 ```python
+from playwright.sync_api import Page, Locator
+
 class HomePageLocators:
-    """TransGlobal 首頁定位器"""
+    """TransGlobal 首頁定位器，使用 Playwright Locator 對象"""
     
-    SERVICES_MENU = 'test_id:services-menu'
-    CONTACT_BUTTON = 'css:[data-testid="contact-button"]'
-    LANGUAGE_SWITCHER = 'test_id:language-switcher'
+    def __init__(self, page: Page):
+        # 優先使用 Playwright 語義化定位器
+        # 定位器屬性名稱使用大寫
+        self.SERVICES_MENU = page.get_by_test_id('services-menu')
+        self.CONTACT_BUTTON = page.locator('[data-testid="contact-button"]')
+        self.LANGUAGE_SWITCHER = page.get_by_role('button', name='Language')
 ```
 
 2. **建立 Page Object** (`pages/home_page.py`):
@@ -318,12 +323,15 @@ from playwright.sync_api import Page
 class HomePage(BaseAction):
     def __init__(self, page: Page):
         super().__init__(page)
+        # 使用 page 實例初始化定位器 - 使用頁面特定名稱以提高可讀性
+        self.home_locators = HomePageLocators(page)
     
     def navigate_to_services(self):
-        self.click_element(HomePageLocators.SERVICES_MENU)
+        # 使用 locators 實例 - 定位器屬性名稱使用大寫
+        self.click_element(self.home_locators.SERVICES_MENU)
     
     def switch_language(self, language: str):
-        self.click_element(HomePageLocators.LANGUAGE_SWITCHER)
+        self.click_element(self.home_locators.LANGUAGE_SWITCHER)
         # 語言選擇的額外邏輯
 ```
 

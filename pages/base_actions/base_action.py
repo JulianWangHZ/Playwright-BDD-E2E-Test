@@ -1,5 +1,5 @@
 import time
-from typing import Union, Tuple
+from typing import Union
 
 from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, Locator
 from config.config import Config
@@ -18,68 +18,25 @@ class BaseAction:
         # Then wait for load, but don't wait for networkidle as it can cause timeouts
         self.page.wait_for_load_state('load')
 
-    def _resolve_locator(self, locator: Union[Locator, Tuple[str, str], str]) -> Locator:
+    def _resolve_locator(self, locator: Union[Locator, str]) -> Locator:
         """
         Resolve locator to Playwright Locator object.
-        Supports multiple input formats:
-        1. Playwright Locator object (preferred) - e.g., page.get_by_test_id('button')
-        2. String format with prefix (preferred for locator classes):
-           - 'test_id:button' - uses page.get_by_test_id('button')
-           - 'css:[data-testid="button"]' - uses page.locator('[data-testid="button"]')
-           - 'xpath://div[@class="button"]' - uses page.locator('xpath=//div[@class="button"]')
-        3. Tuple format (deprecated) - e.g., ('test_id', 'button') or ('css_selector', '[data-testid="button"]')
-        4. Plain string (treated as CSS selector) - e.g., '[data-testid="button"]'
+        
+        **Preferred**: Pass Playwright Locator objects directly.
+        String format (CSS selector) is supported for backward compatibility only.
         
         Args:
-            locator: Playwright Locator, string with prefix, tuple (locator_type, locator_value), or CSS selector string
+            locator: Playwright Locator object (preferred) or CSS selector string
             
         Returns:
             Playwright Locator object
         """
-        # If already a Locator object, return it directly
         if isinstance(locator, Locator):
             return locator
-        
-        # Handle tuple format (locator_type, locator_value) - deprecated but supported for backward compatibility
-        if isinstance(locator, tuple) and len(locator) == 2:
-            locator_type, locator_value = locator
-            locator_type_lower = str(locator_type).lower()
-            
-            if locator_type_lower == 'id':
-                return self.page.locator(f'#{locator_value}')
-            elif locator_type_lower == 'xpath':
-                return self.page.locator(f'xpath={locator_value}')
-            elif locator_type_lower == 'css_selector' or locator_type_lower == 'css':
-                return self.page.locator(locator_value)
-            elif locator_type_lower == 'name':
-                return self.page.locator(f'[name="{locator_value}"]')
-            elif locator_type_lower == 'class_name' or locator_type_lower == 'class':
-                return self.page.locator(f'.{locator_value}')
-            elif locator_type_lower == 'tag_name' or locator_type_lower == 'tag':
-                return self.page.locator(locator_value)
-            elif locator_type_lower == 'link_text':
-                return self.page.get_by_text(locator_value, exact=True)
-            elif locator_type_lower == 'partial_link_text':
-                return self.page.get_by_text(locator_value)
-            elif locator_type_lower == 'data_testid' or locator_type_lower == 'test_id':
-                return self.page.get_by_test_id(locator_value)
-            else:
-                # Default to CSS selector
-                return self.page.locator(locator_value)
-        
-        # Handle string format with prefix (test_id:, css:, xpath:)
         if isinstance(locator, str):
-            if locator.startswith('test_id:'):
-                return self.page.get_by_test_id(locator.replace('test_id:', ''))
-            elif locator.startswith('css:'):
-                return self.page.locator(locator.replace('css:', ''))
-            elif locator.startswith('xpath:'):
-                return self.page.locator(f'xpath={locator.replace("xpath:", "")}')
-            else:
-                # Default to CSS selector (backward compatibility)
-                return self.page.locator(locator)
-        
-        raise TypeError(f"Unsupported locator type: {type(locator)}. Expected Locator, tuple, or string.")
+            return self.page.locator(locator)
+        raise TypeError(f"Unsupported locator type: {type(locator)}. Expected Locator or str.")
+
 
     def open_url(self, url=None, path=None):
         """
@@ -96,12 +53,12 @@ class BaseAction:
             
         self.page.goto(target_url, wait_until='networkidle')
 
-    def find_element(self, locator: Union[Locator, Tuple[str, str], str]):
+    def find_element(self, locator: Union[Locator, str]):
         resolved_locator = self._resolve_locator(locator)
         resolved_locator.wait_for(state='attached', timeout=self.config.DEFAULT_TIMEOUT * 1000)
         return resolved_locator
 
-    def is_element_visible(self, locator: Union[Locator, Tuple[str, str], str]):
+    def is_element_visible(self, locator: Union[Locator, str]):
         try:
             resolved_locator = self._resolve_locator(locator)
             resolved_locator.wait_for(state='visible', timeout=self.config.DEFAULT_TIMEOUT * 1000)
@@ -109,7 +66,7 @@ class BaseAction:
         except PlaywrightTimeoutError:
             return False
 
-    def click_element(self, locator: Union[Locator, Tuple[str, str], str]):
+    def click_element(self, locator: Union[Locator, str]):
         """
         Note: Playwright's click() automatically waits for element to be actionable:
         - Attached to DOM
@@ -121,13 +78,13 @@ class BaseAction:
         resolved_locator = self._resolve_locator(locator)
         resolved_locator.click(timeout=self.config.DEFAULT_TIMEOUT * 1000)
 
-    def click_if_exists(self, locator: Union[Locator, Tuple[str, str], str]):
+    def click_if_exists(self, locator: Union[Locator, str]):
         if self.is_element_visible(locator):
             self.click_element(locator)
             return True
         return False
 
-    def send_keys_to_element(self, locator: Union[Locator, Tuple[str, str], str], text: str):
+    def send_keys_to_element(self, locator: Union[Locator, str], text: str):
         """
         Note: Playwright's input_value(), clear(), and fill() automatically wait for elements to be:
         - Visible (for input_value and fill)
@@ -162,21 +119,21 @@ class BaseAction:
         text = str(text)
         resolved_locator.fill(text)
 
-    def get_element_text(self, locator: Union[Locator, Tuple[str, str], str]):
+    def get_element_text(self, locator: Union[Locator, str]):
         """
         Note: Playwright's inner_text() automatically waits for element to be visible.
         """
         resolved_locator = self._resolve_locator(locator)
         return resolved_locator.inner_text()
 
-    def wait_for_element_visible(self, locator: Union[Locator, Tuple[str, str], str]):
+    def wait_for_element_visible(self, locator: Union[Locator, str]):
         try:
             resolved_locator = self._resolve_locator(locator)
             resolved_locator.wait_for(state='visible', timeout=self.config.DEFAULT_TIMEOUT * 1000)
         except PlaywrightTimeoutError:
             raise PlaywrightTimeoutError(f"Element not found or not visible: {locator}")
 
-    def wait_for_element_clickable(self, locator: Union[Locator, Tuple[str, str], str], timeout=10):
+    def wait_for_element_clickable(self, locator: Union[Locator, str], timeout=10):
         try:
             resolved_locator = self._resolve_locator(locator)
             resolved_locator.wait_for(state='visible', timeout=timeout * 1000)
@@ -188,7 +145,7 @@ class BaseAction:
         except PlaywrightTimeoutError:
             return False
 
-    def wait_for_element_not_clickable(self, locator: Union[Locator, Tuple[str, str], str], timeout=5):
+    def wait_for_element_not_clickable(self, locator: Union[Locator, str], timeout=5):
         try:
             resolved_locator = self._resolve_locator(locator)
             # Wait for element to be disabled or hidden
@@ -205,7 +162,7 @@ class BaseAction:
                 pass
             return False
 
-    def is_element_clickable(self, locator: Union[Locator, Tuple[str, str], str]):
+    def is_element_clickable(self, locator: Union[Locator, str]):
         """
         Note: 
         - is_visible() returns immediately (no waiting)
@@ -221,7 +178,7 @@ class BaseAction:
         except Exception:
             return False
 
-    def verify_element_not_clickable(self, locator: Union[Locator, Tuple[str, str], str], timeout=10):
+    def verify_element_not_clickable(self, locator: Union[Locator, str], timeout=10):
         # First check if element exists
         try:
             resolved_locator = self._resolve_locator(locator)
@@ -243,24 +200,24 @@ class BaseAction:
         
         return True
 
-    def wait_for_element_present(self, locator: Union[Locator, Tuple[str, str], str], timeout=3):
+    def wait_for_element_present(self, locator: Union[Locator, str], timeout=3):
         resolved_locator = self._resolve_locator(locator)
         resolved_locator.wait_for(state='attached', timeout=timeout * 1000)
         return True
 
-    def verify_element_text(self, locator: Union[Locator, Tuple[str, str], str], expected_text: str):
+    def verify_element_text(self, locator: Union[Locator, str], expected_text: str):
         actual_text = self.get_element_text(locator)
         return actual_text == expected_text
 
-    def verify_element_visible(self, locator: Union[Locator, Tuple[str, str], str]):
+    def verify_element_visible(self, locator: Union[Locator, str]):
         return self.is_element_visible(locator)
 
-    def verify_element_clickable(self, locator: Union[Locator, Tuple[str, str], str], timeout=10):
+    def verify_element_clickable(self, locator: Union[Locator, str], timeout=10):
         if not self.wait_for_element_clickable(locator, timeout):
             raise AssertionError(f"Element is not clickable in {timeout} seconds: {locator}")
         return True
 
-    def scroll_to_element(self, locator: Union[Locator, Tuple[str, str], str]):
+    def scroll_to_element(self, locator: Union[Locator, str]):
         """
         Note: Playwright's scroll_into_view_if_needed() automatically waits for element to be attached to DOM.
         """
@@ -268,7 +225,7 @@ class BaseAction:
         resolved_locator.scroll_into_view_if_needed()
         return resolved_locator
 
-    def wait_for_element_disappears(self, locator: Union[Locator, Tuple[str, str], str], timeout=10):
+    def wait_for_element_disappears(self, locator: Union[Locator, str], timeout=10):
         try:
             resolved_locator = self._resolve_locator(locator)
             resolved_locator.wait_for(state='hidden', timeout=timeout * 1000)
@@ -276,7 +233,7 @@ class BaseAction:
         except PlaywrightTimeoutError:
             raise AssertionError(f"Element does not disappear in {timeout} seconds: {locator}")
 
-    def wait_for_element_text_contains(self, locator: Union[Locator, Tuple[str, str], str], expected_text: str, timeout=10):
+    def wait_for_element_text_contains(self, locator: Union[Locator, str], expected_text: str, timeout=10):
         try:
             resolved_locator = self._resolve_locator(locator)
             resolved_locator.wait_for(state='visible', timeout=timeout * 1000)
@@ -300,7 +257,7 @@ class BaseAction:
                 f"Locator: {locator}"
             ) from exc
 
-    def wait_for_element_text_not_contains(self, locator: Union[Locator, Tuple[str, str], str], unexpected_text: str, timeout=10):
+    def wait_for_element_text_not_contains(self, locator: Union[Locator, str], unexpected_text: str, timeout=10):
         try:
             resolved_locator = self._resolve_locator(locator)
             resolved_locator.wait_for(state='visible', timeout=timeout * 1000)
@@ -327,12 +284,12 @@ class BaseAction:
     def refresh_page(self):
         self.page.reload(wait_until='networkidle')
 
-    def refresh_and_wait_for_element(self, locator: Union[Locator, Tuple[str, str], str], timeout=10):
+    def refresh_and_wait_for_element(self, locator: Union[Locator, str], timeout=10):
         self.page.reload(wait_until='networkidle')
         resolved_locator = self._resolve_locator(locator)
         resolved_locator.wait_for(state='visible', timeout=timeout * 1000)
 
-    def wait_for_element_has_value(self, locator: Union[Locator, Tuple[str, str], str], timeout=10):
+    def wait_for_element_has_value(self, locator: Union[Locator, str], timeout=10):
         # First ensure the element exists and is visible
         self.wait_for_element_visible(locator)
         

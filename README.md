@@ -301,12 +301,17 @@ def get_device_class(device_type: str) -> BaseDevice:
 
 1. **Define Locators** (`locators/home_page_locators.py`):
 ```python
+from playwright.sync_api import Page, Locator
+
 class HomePageLocators:
-    """Locators for TransGlobal home page."""
+    """Locators for home page using Playwright Locator objects."""
     
-    SERVICES_MENU = 'test_id:services-menu'
-    CONTACT_BUTTON = 'css:[data-testid="contact-button"]'
-    LANGUAGE_SWITCHER = 'test_id:language-switcher'
+    def __init__(self, page: Page):
+        # Use Playwright's semantic locators when possible
+        # Use UPPERCASE for locator property names
+        self.SERVICES_MENU = page.get_by_test_id('services-menu')
+        self.CONTACT_BUTTON = page.locator('[data-testid="contact-button"]')
+        self.LANGUAGE_SWITCHER = page.get_by_role('button', name='Language')
 ```
 
 2. **Create Page Object** (`pages/home_page.py`):
@@ -318,12 +323,15 @@ from playwright.sync_api import Page
 class HomePage(BaseAction):
     def __init__(self, page: Page):
         super().__init__(page)
+        # Initialize locators with page instance - use page-specific name for better readability
+        self.home_locators = HomePageLocators(page)
     
     def navigate_to_services(self):
-        self.click_element(HomePageLocators.SERVICES_MENU)
+        # Use locators instance - locator properties are in UPPERCASE
+        self.click_element(self.home_locators.SERVICES_MENU)
     
     def switch_language(self, language: str):
-        self.click_element(HomePageLocators.LANGUAGE_SWITCHER)
+        self.click_element(self.home_locators.LANGUAGE_SWITCHER)
         # Additional logic for language selection
 ```
 

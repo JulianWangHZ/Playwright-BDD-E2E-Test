@@ -5,253 +5,80 @@
 ```
 pages/
 ├── base_actions/
-│   ├── base_action.py          # Base action class (existing)
-│   └── base_utils.py            # Utility class (existing)
+│   ├── base_action.py          # Base action class (Playwright-based)
+│   └── base_utils.py            # Utility class
 │
-├── components/                  # Base component layer (shared across pages)
-│   ├── __init__.py
-│   ├── header.py               # Header navigation component
-│   ├── footer.py               # Footer component
-│   ├── navigation.py           # Navigation menu component
-│   ├── chat_widget.py          # Chat widget component
-│   └── social_links.py         # Social media links component
+├── components/                  # Components directory (for future use)
+│   └── __init__.py
 │
-├── base_page.py                # Base page class (includes Header/Footer)
-│
-├── home_page.py                # Home page
-├── contact_us_page.py          # Contact Us page
-│
-├── services/                   # Services module
-│   ├── __init__.py
-│   ├── services_base_page.py  # Services base page
-│   ├── real_estate_page.py     # Real estate service page
-│   ├── lending_page.py         # Lending service page
-│   ├── insurance_page.py       # Insurance service page
-│   ├── investment_page.py      # Investment service page
-│   └── tax_services_page.py    # Tax services page
-│
-├── events/                     # Events module
-│   ├── __init__.py
-│   ├── events_base_page.py     # Events base page
-│   ├── webinar_page.py         # Webinar page
-│   └── seminars_page.py         # Seminar series page
-│
-├── media/                      # Media module
-│   ├── __init__.py
-│   ├── media_page.py           # Media center page
-│   └── transglobal_tv_page.py  # TransGlobal TV page
-│
-├── news/                       # News module
-│   ├── __init__.py
-│   ├── news_page.py            # News list page
-│   └── news_detail_page.py      # News detail page
-│
-└── about_us/                   # About Us module
-    ├── __init__.py
-    ├── about_us_page.py        # About Us page
-    ├── our_story_page.py       # Our Story page
-    ├── our_staff_page.py       # Our Staff page
-    └── locations_page.py       # Office locations page
+└── home_page.py                # Home page
+
+locators/
+└── home_page_locators.py       # Home page locators
 ```
 
 ## 🔗 Inheritance Relationship Diagram
 
 ```
-BaseAction (Base action class)
+BaseAction (Base action class - Playwright-based)
     │
-    ├── BaseComponent (Base component class)
-    │       │
-    │       ├── Header (Header navigation)
-    │       ├── Footer (Footer)
-    │       ├── Navigation (Navigation menu)
-    │       ├── ChatWidget (Chat widget)
-    │       └── SocialLinks (Social media links)
-    │
-    └── BasePage (Base page class)
-            │
-            ├── HomePage (Home page)
-            ├── ContactUsPage (Contact Us page)
-            │
-            ├── ServicesBasePage (Services base page)
-            │       │
-            │       ├── RealEstatePage (Real estate service)
-            │       ├── LendingPage (Lending service)
-            │       ├── InsurancePage (Insurance service)
-            │       ├── InvestmentPage (Investment service)
-            │       └── TaxServicesPage (Tax services)
-            │
-            ├── EventsBasePage (Events base page)
-            │       │
-            │       ├── WebinarPage (Webinar)
-            │       └── SeminarsPage (Seminar series)
-            │
-            ├── MediaPage (Media center)
-            ├── TransGlobalTVPage (TransGlobal TV)
-            │
-            ├── NewsPage (News list)
-            ├── NewsDetailPage (News detail)
-            │
-            └── AboutUsBasePage (About Us base page)
-                    │
-                    ├── OurStoryPage (Our Story)
-                    ├── OurStaffPage (Our Staff)
-                    └── LocationsPage (Office locations)
+    └── HomePage (Home page)
 ```
 
-## 🧩 Component Composition Relationship
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    BasePage                              │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐              │
-│  │  Header  │  │ Navigation│ │  Footer  │              │
-│  └──────────┘  └──────────┘  └──────────┘              │
-│                                                          │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │         Page Specific Content                     │  │
-│  │  (e.g., ContactUsPage contains form logic)        │  │
-│  └──────────────────────────────────────────────────┘  │
-│                                                          │
-│  ┌──────────┐  ┌──────────┐                           │
-│  │  Chat    │  │  Social  │                           │
-│  │  Widget  │  │  Links   │                           │
-│  └──────────┘  └──────────┘                           │
-└─────────────────────────────────────────────────────────┘
-```
-
-## 📋 Locators Corresponding Structure
+## 📋 Locators Structure
 
 ```
 locators/
-├── components/
-│   ├── header_locators.py
-│   ├── footer_locators.py
-│   ├── navigation_locators.py
-│   ├── chat_widget_locators.py
-│   └── social_links_locators.py
-│
-├── home_page_locators.py
-├── contact_us_locators.py
-│
-├── services/
-│   ├── real_estate_locators.py
-│   ├── lending_locators.py
-│   ├── insurance_locators.py
-│   ├── investment_locators.py
-│   └── tax_services_locators.py
-│
-├── events/
-│   ├── events_locators.py
-│   ├── webinar_locators.py
-│   └── seminars_locators.py
-│
-├── media/
-│   ├── media_locators.py
-│   └── transglobal_tv_locators.py
-│
-├── news/
-│   ├── news_locators.py
-│   └── news_detail_locators.py
-│
-└── about_us/
-    ├── about_us_locators.py
-    ├── our_story_locators.py
-    ├── our_staff_locators.py
-    └── locations_locators.py
+└── home_page_locators.py       # Home page locators
 ```
 
 ## 🎯 Usage Examples
 
-### 1. Base Component Usage
+### 1. Locator Definition (Using Playwright Locator Objects)
 
 ```python
-# pages/components/header.py
-from pages.base_actions.base_action import BaseAction
-from locators.components.header_locators import HeaderLocators
+# locators/home_page_locators.py
+from playwright.sync_api import Page, Locator
 
-class Header(BaseAction):
-    def click_logo(self):
-        self.click_element(HeaderLocators.LOGO)
+class HomePageLocators:
+    """Playwright locators using Locator objects - stored in separate file."""
     
-    def get_navigation_menu(self):
-        return Navigation(self.page)
+    def __init__(self, page: Page):
+        # Use Playwright's semantic locators when possible
+        # Use UPPERCASE for locator property names
+        self.SERVICES_LINK = page.get_by_role("link", name="SERVICES")
+        self.HEADER_LOGO = page.locator('[data-testid="header-logo"]')
+        self.SERVICES_MENU = page.get_by_test_id('services-menu')
+        self.CONTACT_BUTTON = page.locator('[data-testid="contact-button"]')
+        
+        # CSS selectors when semantic locators aren't available
+        self.RESTAURANT_HEADING = page.locator('[data-testid="restaurant-heading"]')
 ```
 
-### 2. Base Page Usage
-
-```python
-# pages/base_page.py
-from pages.base_actions.base_action import BaseAction
-from pages.components.header import Header
-from pages.components.footer import Footer
-
-class BasePage(BaseAction):
-    def __init__(self, page):
-        super().__init__(page)
-        self.header = Header(page)
-        self.footer = Footer(page)
-    
-    def wait_for_page_loaded(self):
-        self.header.wait_for_loaded()
-        self.footer.wait_for_loaded()
-```
-
-### 3. Specific Page Usage
+### 2. Page Object Usage (Direct inheritance from BaseAction)
 
 ```python
 # pages/home_page.py
-from pages.base_page import BasePage
+from playwright.sync_api import Page
+from pages.base_actions.base_action import BaseAction
 from locators.home_page_locators import HomePageLocators
 
-class HomePage(BasePage):
-    def __init__(self, page):
+class HomePage(BaseAction):
+    def __init__(self, page: Page):
         super().__init__(page)
+        # Initialize locators with page instance - use page-specific name for better readability
+        self.home_locators = HomePageLocators(page)
     
     def open(self):
         self.open_url()
         self.wait_for_page_loaded()
     
-    def get_services_section_title(self):
-        return self.get_element_text(HomePageLocators.SERVICES_SECTION_TITLE)
-```
-
-### 4. Contact Us Page Usage (Form logic directly in the page)
-
-```python
-# pages/contact_us_page.py
-from pages.base_page import BasePage
-from locators.contact_us_locators import ContactUsLocators
-
-class ContactUsPage(BasePage):
-    def __init__(self, page):
-        super().__init__(page)
+    def click_services(self):
+        # Use locators instance - locator properties are in UPPERCASE
+        self.click_element(self.home_locators.SERVICES_LINK)
     
-    def fill_contact_form(self, form_data: dict):
-        """Fill contact form - form logic directly in the page"""
-        self.send_keys_to_element(ContactUsLocators.FIRST_NAME, form_data.get('first_name'))
-        self.send_keys_to_element(ContactUsLocators.LAST_NAME, form_data.get('last_name'))
-        self.send_keys_to_element(ContactUsLocators.EMAIL, form_data.get('email'))
-        # ... other form fields
-    
-    def submit_form(self):
-        """Submit the form"""
-        self.click_element(ContactUsLocators.SUBMIT_BUTTON)
-```
-
-### 5. Service Page Usage
-
-```python
-# pages/services/real_estate_page.py
-from pages.services.services_base_page import ServicesBasePage
-from locators.services.real_estate_locators import RealEstateLocators
-
-class RealEstatePage(ServicesBasePage):
-    def __init__(self, page):
-        super().__init__(page)
-    
-    def wait_for_loaded(self):
-        super().wait_for_loaded()
-        self.wait_for_element_visible(RealEstateLocators.PAGE_TITLE)
+    def get_header_logo_text(self):
+        return self.get_element_text(self.home_locators.HEADER_LOGO)
 ```
 
 ## 🔄 Component Interaction Flow
@@ -259,36 +86,112 @@ class RealEstatePage(ServicesBasePage):
 ```
 Test Step
     ↓
-Page Object (HomePage, ContactUsPage, etc.)
+Page Object (HomePage)
     ↓
-BasePage (provides Header/Footer functionality)
-    ↓
-Components (Header, Footer, Navigation, etc.)
-    ↓
-BaseAction (base action methods)
+BaseAction (base action methods - Playwright-based)
     ↓
 Playwright API
 ```
 
-## 📊 Modularization Advantages
+## 📊 Key Design Principles
 
-1. **Component Reusability**: Header, Footer, Navigation are shared across all pages
-2. **Easy Maintenance**: Modifying components only requires updating one place
-3. **Clear Structure**: Organized by business modules, easy to find
-4. **Strong Extensibility**: Adding new pages only requires inheriting the corresponding base class
-5. **Test-Friendly**: Components can be tested independently
+### 1. **Playwright Locator Objects**
+- All locators are Playwright `Locator` objects, not strings
+- Locators stored in separate `locators/` classes
+- Locator properties use **UPPERCASE** naming (e.g., `self.SERVICES_LINK`)
+- Page Object variables use **lowercase** naming (e.g., `self.home_locators`)
+
+### 2. **Direct Inheritance from BaseAction**
+- All Page Objects directly inherit from `BaseAction`
+- No intermediate `BasePage` class (removed for simplicity)
+- `wait_for_page_loaded()` is available in `BaseAction`
+
+### 3. **Locator Organization**
+- Locators stored in `locators/` folder, separate from Page Objects
+- Each page has its own locator class
+- Locator classes initialize with `page` instance in `__init__`
+- Locator properties defined in **UPPERCASE** for clarity
+
+### 4. **Naming Convention**
+- **Locator properties**: UPPERCASE (e.g., `self.SERVICES_LINK`, `self.CHECKOUT_BUTTON`)
+- **Page Object locator variables**: lowercase with page prefix (e.g., `self.home_locators`, `self.order_locators`)
+- **Usage**: `self.{page}_locators.ELEMENT_NAME` (e.g., `self.home_locators.SERVICES_LINK`)
 
 ## 💡 Design Decision Explanation
 
-### Why is Contact Form not a Component?
+### Why Direct Inheritance from BaseAction?
 
-- **Single Use Case**: Contact Form is only used on the Contact Us page, with no cross-page reuse requirements
-- **Avoid Over-Engineering**: If other pages need similar forms in the future, consider extracting as a component then
-- **Simplify Architecture**: Form logic directly written in `ContactUsPage` is more intuitive and easier to maintain
-- **Follow YAGNI Principle**: "You Aren't Gonna Need It" - don't design features you don't need yet
+- **Simplicity**: Removes unnecessary abstraction layer
+- **Playwright Native**: Direct access to Playwright features
+- **Flexibility**: Each page can implement its own `wait_for_page_loaded()` logic if needed
+- **Maintainability**: Less inheritance hierarchy means easier to understand and maintain
 
-### When Should a Form be Extracted as a Component?
+### Why Separate Locator Classes?
 
-- When the form appears on multiple pages (e.g., multiple service pages have contact forms)
-- When the form logic is very complex and needs independent testing
-- When the form needs to be called as an independent module by other systems
+- **Organization**: Centralized locator management
+- **Reusability**: Locators can be shared across multiple Page Objects if needed
+- **Maintainability**: Update locators in one place
+- **Type Safety**: Full Playwright Locator type support with IDE autocomplete
+
+### Why UPPERCASE for Locator Properties?
+
+- **Clarity**: Distinguishes locators from regular instance variables
+- **Consistency**: Follows constant naming convention
+- **Readability**: `self.home_locators.SERVICES_LINK` is more readable than `self.home_locators.services_link`
+- **Industry Standard**: Common practice in test automation frameworks
+
+## 🚀 Playwright-Specific Features
+
+### Auto-Waiting
+- Playwright automatically waits for elements to be actionable
+- No need for explicit waits in most cases
+- Methods like `click()`, `fill()`, `inner_text()` auto-wait
+
+### Locator Methods
+- `page.get_by_role()` - Semantic locators (preferred)
+- `page.get_by_test_id()` - For `data-testid` attributes
+- `page.get_by_text()` - Text-based locators
+- `page.get_by_label()` - Form label locators
+- `page.locator()` - CSS/XPath selectors (when needed)
+
+### Type Safety
+- Full type support with Playwright Locator objects
+- IDE autocomplete and type checking
+- Better error messages and debugging
+
+## 🔮 Future Extensibility
+
+As the project grows, you can add:
+
+- **Components**: Add reusable components in `pages/components/` (e.g., Header, Footer)
+- **More Pages**: Add new page objects following the same pattern
+- **Service Modules**: Organize related pages in subdirectories (e.g., `pages/services/`)
+- **Shared Locators**: Create common locator classes for shared elements
+
+### Example: Adding a New Page
+
+```python
+# locators/contact_us_locators.py
+from playwright.sync_api import Page
+
+class ContactUsLocators:
+    def __init__(self, page: Page):
+        self.FIRST_NAME = page.get_by_label('First Name')
+        self.SUBMIT_BUTTON = page.get_by_role('button', name='Submit')
+
+# pages/contact_us_page.py
+from playwright.sync_api import Page
+from pages.base_actions.base_action import BaseAction
+from locators.contact_us_locators import ContactUsLocators
+
+class ContactUsPage(BaseAction):
+    def __init__(self, page: Page):
+        super().__init__(page)
+        self.contact_locators = ContactUsLocators(page)
+    
+    def fill_form(self, first_name: str):
+        self.send_keys_to_element(self.contact_locators.FIRST_NAME, first_name)
+    
+    def submit(self):
+        self.click_element(self.contact_locators.SUBMIT_BUTTON)
+```
