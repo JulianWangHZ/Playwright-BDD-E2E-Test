@@ -11,6 +11,12 @@ class BaseAction:
         self.page = page
         self.config = Config()
         self.utils = BaseUtils()
+        
+    def wait_for_page_loaded(self):
+        # Wait for DOM to be ready first
+        self.page.wait_for_load_state('domcontentloaded')
+        # Then wait for load, but don't wait for networkidle as it can cause timeouts
+        self.page.wait_for_load_state('load')
 
     def _resolve_locator(self, locator: Union[Locator, Tuple[str, str], str]) -> Locator:
         """

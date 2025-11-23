@@ -272,20 +272,41 @@ except PlaywrightTimeoutError:
 
 ## 7. Comments and Documentation
 
-### Docstring
-- All public methods should have docstrings
-- Use Google-style docstrings
-- Include parameters, return values, and possible exceptions
+### Docstring Rules
+- **Default**: Do NOT add docstrings (""" """) when generating code - keep code clean and concise
+- **Exception**: Only add docstrings for complex functions that need explanation:
+  - Functions with complex logic or algorithms
+  - Functions with non-obvious behavior
+  - Functions that require detailed parameter/return value documentation
+  - Public API methods that need external documentation
+- When docstrings are needed, use Google-style docstrings
+- Include parameters, return values, and possible exceptions only when necessary
 
 ```python
+# ✅ Good: Simple function - no docstring needed
 def click_checkout_button(self):
+    self.click_element(OrderPageLocators.CHECKOUT_BUTTON)
+
+# ✅ Good: Complex function - docstring needed
+def calculate_dynamic_timeout(self, element_count: int, base_timeout: int = 10) -> int:
     """
-    Clicks the checkout button on the page.
+    Calculate dynamic timeout based on element count and base timeout.
+    
+    Uses exponential backoff for large element counts to prevent timeout issues.
+    
+    Args:
+        element_count: Number of elements to wait for
+        base_timeout: Base timeout in seconds (default: 10)
+    
+    Returns:
+        Calculated timeout in seconds
     
     Raises:
-        PlaywrightTimeoutError: If the checkout button is not found or not clickable within timeout.
+        ValueError: If element_count is negative
     """
-    self.click_element(self.checkout_button)
+    if element_count < 0:
+        raise ValueError("element_count cannot be negative")
+    return base_timeout + (element_count * 0.5)
 ```
 
 ## 8. Test Data Management
@@ -375,7 +396,7 @@ Before submitting code, ensure:
 - [ ] Use Playwright Locator objects directly (no conversion needed)
 - [ ] Page Objects inherit from `BaseAction` and use its methods
 - [ ] Step definitions use parser to pass parameters
-- [ ] All public methods have docstrings
+- [ ] Docstrings only added for complex functions (not for simple methods)
 - [ ] No duplicate code
 - [ ] Error handling is appropriate (use `PlaywrightTimeoutError`)
 - [ ] Test data meets format requirements
