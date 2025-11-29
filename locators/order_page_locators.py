@@ -8,8 +8,8 @@ class OrderPageLocators:
         self.BRANCH_ADDRESS = page.locator('[data-cy="branch-address-order-page"]')
         self.MENU_NAVIGATION = page.locator('#category-navbar')
         self.SERVICE_SWITCHER = page.locator('[data-cy="online-order-switch"]')
-        self.DELIVERY_SWITCHER_BUTTON = page.locator('[data-cy="bt-delivery"]')
-        self.TAKEOUT_SWITCHER_BUTTON = page.locator('[data-cy="bt-takeout"]')
+        self.DELIVERY_SWITCHER_BUTTON = page.locator('[data-cy="bt-delivery"]').first
+        self.TAKEOUT_SWITCHER_BUTTON = page.locator('[data-cy="bt-takeout"]').first
         self.ADDRESS_PICKER_TRIGGER = page.locator('[data-cy="go-to-address-and-date-picker"]')
         self.ADDRESS_PICKER_MODAL = page.locator('[class*="AddressTimePicker__Picker"]')
         self.ADDRESS_CLEAR_BUTTON = page.locator('[data-cy="address-clear-button"]')
