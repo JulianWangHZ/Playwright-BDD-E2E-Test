@@ -1,8 +1,8 @@
-# TransGlobal Web Automation Test Suite
+# Web Automation E2E Test Suite
 
 > 🌐 This guide is also available in [繁體中文](README.zh-TW.md).
 
-An enterprise-grade end-to-end testing framework engineered with **Playwright** and **pytest-bdd** to ensure quality and reliability of [TransGlobal](https://www.transglobalus.com/) web platform. Built on modern browser automation principles, this framework implements Page Object Model architecture with Behavior-Driven Development methodology, enabling maintainable, scalable, and robust test automation. The framework capitalizes on Playwright's intelligent auto-waiting mechanisms, eliminating flaky tests while providing seamless integration with Playwright MCP for accelerated test development and interactive debugging workflows.
+An enterprise-grade end-to-end testing framework engineered with **Playwright** and **pytest-bdd** to ensure quality and reliability of web applications. Built on modern browser automation principles, this framework implements Page Object Model architecture with Behavior-Driven Development methodology, enabling maintainable, scalable, and robust test automation. The framework capitalizes on Playwright's intelligent auto-waiting mechanisms, eliminating flaky tests while providing seamless integration with Playwright MCP for accelerated test development and interactive debugging workflows.
 
 ---
 
@@ -24,10 +24,10 @@ An enterprise-grade end-to-end testing framework engineered with **Playwright** 
 
 ## 🎯 Overview
 
-This test automation framework is designed to ensure the quality and reliability of TransGlobal's web platform, covering critical user journeys across multiple services including Real Estate, Lending, Insurance, Investment, and Tax Services.
+This test automation framework is designed to ensure the quality and reliability of web applications, covering critical user journeys and business flows.
 
 ### Target Application
-- **Website**: [https://www.transglobalus.com/](https://www.transglobalus.com/)
+- **Website**: [https://staging.inline.app/](https://staging.inline.app/)
 - **Focus Areas**: User interface validation, cross-browser compatibility, responsive design testing, and critical business flows
 
 ---
@@ -251,7 +251,7 @@ Add to `~/.cursor/mcp.json`:
 ### Usage Guidelines
 
 1. **Test Development Workflow**
-   - Use Playwright MCP to interactively explore the TransGlobal website
+   - Use Playwright MCP to interactively explore the target website
    - Generate locators and test code directly from browser actions
    - Validate UI elements before writing test scenarios
 
@@ -339,14 +339,14 @@ class HomePage(BaseAction):
 
 1. **Feature File** (`features/home_page.feature`):
 ```gherkin
-Feature: TransGlobal Home Page
+Feature: Home Page
   As a user
-  I want to navigate the TransGlobal website
+  I want to navigate the website
   So that I can access various services
 
-  @home_page @smoke
+  @home_page @verify_page_elements
   Scenario: User can access home page
-    Given I navigate to the TransGlobal home page
+    Given I navigate to the home page
     When I view the page content
     Then I should see the main navigation menu
     And I should see the services section
@@ -359,11 +359,11 @@ from pages.home_page import HomePage
 
 scenarios("../features/home_page.feature")
 
-@given("I navigate to the TransGlobal home page")
+@given("I navigate to the home page")
 def navigate_to_home_page(page):
     home_page = HomePage(page)
-    home_page.open_url()
-    home_page.wait_for_loaded()
+    home_page.open()
+    home_page.wait_for_page_loaded()
 
 @when("I view the page content")
 def view_page_content(page):
@@ -425,7 +425,7 @@ playwright install webkit
 
 #### 2. Timeout Errors
 - Increase timeout in `config/config.py`: `DEFAULT_TIMEOUT`
-- Check network connectivity to TransGlobal website
+- Check network connectivity to target website
 - Verify element locators are correct
 
 #### 3. Element Not Found
