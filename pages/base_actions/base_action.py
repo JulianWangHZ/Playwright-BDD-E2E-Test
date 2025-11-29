@@ -51,7 +51,9 @@ class BaseAction:
         else:
             target_url = self.config.get_page_url(path or '')
             
-        self.page.goto(target_url, wait_until='networkidle')
+        # Use 'domcontentloaded' instead of 'networkidle' to avoid hanging on dynamic sites
+        # 'networkidle' can wait indefinitely for sites
+        self.page.goto(target_url, wait_until='domcontentloaded', timeout=self.config.DEFAULT_TIMEOUT * 1000)
 
     def find_element(self, locator: Union[Locator, str]):
         resolved_locator = self._resolve_locator(locator)
@@ -282,10 +284,12 @@ class BaseAction:
             ) from exc
 
     def refresh_page(self):
-        self.page.reload(wait_until='networkidle')
+        # Use 'domcontentloaded' instead of 'networkidle' to avoid hanging on dynamic sites
+        self.page.reload(wait_until='domcontentloaded', timeout=self.config.DEFAULT_TIMEOUT * 1000)
 
     def refresh_and_wait_for_element(self, locator: Union[Locator, str], timeout=10):
-        self.page.reload(wait_until='networkidle')
+        # Use 'domcontentloaded' instead of 'networkidle' to avoid hanging on dynamic sites
+        self.page.reload(wait_until='domcontentloaded', timeout=self.config.DEFAULT_TIMEOUT * 1000)
         resolved_locator = self._resolve_locator(locator)
         resolved_locator.wait_for(state='visible', timeout=timeout * 1000)
 

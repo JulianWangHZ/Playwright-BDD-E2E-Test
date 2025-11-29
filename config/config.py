@@ -13,9 +13,9 @@ EnvType = Literal['dev', 'staging', 'prod']
 
 # Domain Configuration -> Both dev, staging, prod use the same domain
 DOMAIN = {
-    'dev': 'www.transglobalus.com',
-    'staging': 'www.transglobalus.com',
-    'prod': 'www.transglobalus.com'
+    'dev': 'staging.inline.app',
+    'staging': 'staging.inline.app',
+    'prod': 'staging.inline.app'
 }
 
 # Get current env domain
@@ -41,6 +41,15 @@ class Config:
         # environment configuration
         self.ENV: EnvType = os.getenv('ENV', 'staging')  # type: ignore
         
+        # URL configuration - based on environment setting different BASE_PATH
+        if self.ENV == 'staging':
+            default_path = '/order/-N86uOXnWsyA-7n8EKma:inline-staging-2a466/-NEdHYAxrToGxfj4BxSw?language=en'
+        elif self.ENV == 'dev':
+            default_path = '/order/-N86uOXnWsyA-7n8EKma:inline-staging-2a466/-NEdHYAxrToGxfj4BxSw?language=en'
+        else:
+            default_path = '/order/-N86uOXnWsyA-7n8EKma:inline-staging-2a466/-NEdHYAxrToGxfj4BxSw?language=en'
+        self.BASE_PATH: str = os.getenv('BASE_PATH', default_path)
+        
         # device configuration
         self.DEVICE_TYPE: str = 'desktop'  # default device type
         
@@ -52,7 +61,9 @@ class Config:
     def BASE_URL(self) -> str:
         protocol = 'https://'
         domain = get_domain(self.ENV)
-        return f"{protocol}{domain}"
+        # ensure BASE_PATH starts with / to avoid concatenation error
+        base_path = '/' + self.BASE_PATH.lstrip('/') if self.BASE_PATH else ''
+        return f"{protocol}{domain}{base_path}"
     
     def get_page_url(self, path: str = '') -> str:
         if path:
