@@ -312,3 +312,13 @@ class BaseAction:
             self.page.wait_for_timeout(100)  # Wait 100ms
         
         raise PlaywrightTimeoutError(f"Element in {timeout} seconds did not get a value: {locator}")
+
+    def go_back(self, wait_until='domcontentloaded', timeout=None):
+        if timeout is None:
+            timeout = self.config.DEFAULT_TIMEOUT * 1000
+        self.page.go_back(wait_until=wait_until, timeout=timeout)
+
+    def go_forward(self, wait_until='domcontentloaded', timeout=None):
+        if timeout is None:
+            timeout = self.config.DEFAULT_TIMEOUT * 1000
+        self.page.go_forward(wait_until=wait_until, timeout=timeout)
