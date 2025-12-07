@@ -1,4 +1,7 @@
 import os
+import sys
+import time
+import subprocess
 from datetime import datetime
 import traceback
 
@@ -211,3 +214,16 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func, exception
     print(f"\033[31mError message:\033[0m \033[97m{str(exception)}\033[0m")
     print(f"\033[31m\nFull error:\033[0m")
     traceback.print_exc()
+
+
+def pytest_sessionfinish(session, exitstatus):
+    try:
+        subprocess.run(["pkill", "-f", "ms-playwright.*chromium.*remote-debugging"], check=False, timeout=5)
+        subprocess.run(["pkill", "-f", "Chromium.*--remote-debugging-pipe"], check=False, timeout=5)
+        subprocess.run(["pkill", "-f", "Chromium.*--remote-debugging-port"], check=False, timeout=5)
+        
+        time.sleep(1)
+    except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError):
+        pass
+    
+    sys.exit(exitstatus)
