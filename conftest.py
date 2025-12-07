@@ -217,13 +217,18 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func, exception
 
 
 def pytest_sessionfinish(session, exitstatus):
-    try:
-        subprocess.run(["pkill", "-f", "ms-playwright.*chromium.*remote-debugging"], check=False, timeout=5)
-        subprocess.run(["pkill", "-f", "Chromium.*--remote-debugging-pipe"], check=False, timeout=5)
-        subprocess.run(["pkill", "-f", "Chromium.*--remote-debugging-port"], check=False, timeout=5)
-        
-        time.sleep(1)
-    except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError):
-        pass
+    if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):
+        return
+    
+    worker_id = os.environ.get("PYTEST_XDIST_WORKER")
+    if worker_id is None:
+        try:
+            subprocess.run(["pkill", "-f", "ms-playwright.*chromium.*remote-debugging"], check=False, timeout=5)
+            subprocess.run(["pkill", "-f", "Chromium.*--remote-debugging-pipe"], check=False, timeout=5)
+            subprocess.run(["pkill", "-f", "Chromium.*--remote-debugging-port"], check=False, timeout=5)
+            
+            time.sleep(1)
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError):
+            pass
     
     sys.exit(exitstatus)
